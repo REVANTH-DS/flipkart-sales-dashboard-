@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:5.0
+    container_name: flipkart-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - flipkart-network
+
+  backend:
+    build: ./backend
+    container_name: flipkart-backend
+    ports:
+      - "5000:5000"
+    environment:
+      PORT: "5000"
+      MONGODB_URI: "mongodb://admin:password123@mongodb:27017/flipkart-sales"
+      JWT_SECRET: "your_jwt_secret_key_change_this"
+      NODE_ENV: "development"
+    depends_on:
+      - mongodb
+    volumes:
+      - ./backend/src:/app/src
+    networks:
+      - flipkart-network
+
+  frontend:
+    build: ./frontend
+    container_name: flipkart-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      REACT_APP_API_URL: "http://localhost:5000/api"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend/src:/app/src
+    networks:
+      - flipkart-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  flipkart-network:
+    driver: bridge
